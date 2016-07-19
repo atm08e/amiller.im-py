@@ -1,82 +1,65 @@
 import asyncio
+import logging
+import os
+import sys
 
+from aiohttp import web
 import aiohttp_jinja2
 import jinja2
-from aiohttp import web
 
-import logging
+# To get a grib on our parent module
+script_dir = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(os.path.join(script_dir, '..'))
+
+from amiller.views import SiteHandler
+from amiller.routes import setup_routes
+
+# TODO PROJECT ROOT
+#PROJ_ROOT = pathlib.Path(__file__).parent.parent
 
 class Server:
+    async def init(loop):
+        #
+        # setup application and extensions
+        app = web.Application(loop=loop)
+        #
+        # setup template engine
+        aiohttp_jinja2.setup(app, loader=jinja2.PackageLoader('amiller','templates'))
 
-    async def index(self):
-        pass
+        #
+        # load config from yaml file
+        ##conf = load_config(str(PROJ_ROOT / 'config' / 'polls.yaml'))
 
-    async def blod(self):
-        pass
+        #
+        # create connection to the database
+        # pg = await init_postgres(conf['postgres'] ||, loop)
 
-    async def favorites(self):
-        pass
+        #
+        # defer the closer
+        # async def close_pg(app):
+        #    pg.close()
+        #    await pg.wait_closed()
 
-    async def resume(self):
-        pass
+        #app.on_cleanup.append(close_pg)
 
-    async def fishing(self):
-        pass
+        # setup views and routes
+        handler = SiteHandler()
+        setup_routes(app, handler, project_root=None)
 
-    async def snow(self):
-        pass
-
-    async def about(self):
-        pass
-
-    async def add_routes(self):
-        pass
-
-    async def init(self):
-        app = web.Application()
-        app.router.add_route('GET', '/', self.index)
-        app.router.add_route('GET', '/blog', self.blog)
-        app.router.add_route('GET', '/favorites', self.favorites)
-        app.router.add_route('GET', '/resume', self.resume)
-        app.router.add_route('GET', '/fishing', self.fishing)
-        app.router.add_route('GET', '/snow', self.snow)
-        app.router.add_route('GET', '/about', self.about)
-        return app
+        # TODO add these to config
+        host, port = 'localhost', 8088
+        return app, host, port
 
 
+    def main():
+        # init logging
+        logging.basicConfig(level=logging.INFO)
 
-async def init(loop):
-    # setup application and extensions
-    app = web.Application(loop=loop)
-    aiohttp_jinja2.setup(
-        app, loader=jinja2.PackageLoader('aiohttpdemo_polls', 'templates'))
-    # load config from yaml file
-    ##conf = load_config(str(PROJ_ROOT / 'config' / 'polls.yaml'))
+        # TODO - docs
+        loop = asyncio.get_event_loop()
+        app, host, port = loop.run_until_complete(init(loop))
 
-    # create connection to the database
-    #pg = await init_postgres(conf['postgres'] ||, loop)
-
-    #async def close_pg(app):
-    #    pg.close()
-    #    await pg.wait_closed()
-
-    #app.on_cleanup.append(close_pg)
-
-    # setup views and routes
-    #handler = SiteHandler(pg)
-    #setup_routes(app, handler, PROJ_ROOT)
-    #setup_middlewares(app)
-
-    host, port = conf['host'], conf['port']
-    return app, host, port
-
-
-def main():
-    # init logging
-    logging.basicConfig(level=logging.DEBUG)
-
-    loop = asyncio.get_event_loop()
-    app, host, port = loop.run_until_complete(init(loop))
+        web.run_app(app, host=host, port=port)
 
 if __name__ == '__main__':
-     main()
+     Server.main()
