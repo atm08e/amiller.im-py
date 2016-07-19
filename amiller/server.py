@@ -18,7 +18,7 @@ from amiller.routes import setup_routes
 #PROJ_ROOT = pathlib.Path(__file__).parent.parent
 
 class Server:
-    async def init(loop):
+    async def init(self, loop):
         #
         # setup application and extensions
         app = web.Application(loop=loop)
@@ -51,15 +51,16 @@ class Server:
         return app, host, port
 
 
-    def main():
+    def run(self):
         # init logging
         logging.basicConfig(level=logging.INFO)
 
         # TODO - docs
         loop = asyncio.get_event_loop()
-        app, host, port = loop.run_until_complete(init(loop))
+        app, host, port = loop.run_until_complete(self.init(loop))
 
         web.run_app(app, host=host, port=port)
 
 if __name__ == '__main__':
-     Server.main()
+     a = Server()
+     a.run()
