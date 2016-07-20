@@ -47,9 +47,11 @@ class Server:
         # load config from yaml file
         ##conf = load_config(str(PROJ_ROOT / 'config' / 'polls.yaml'))
 
+        handler = Handlers()
+
         # Load markdown
         await Server.init_markdown_engine(app)
-        await Server.setup_routes(app)
+        await Server.setup_routes(app, handler)
 
         #
         # create connection to the database
@@ -81,9 +83,14 @@ class Server:
         web.run_app(app, host=host, port=port)
 
     @staticmethod
-    def setup_routes(app, handler):
+    async def setup_routes(app, handler):
         add_route = app.router.add_route
-        for route in get_routes_generator(handler):
+        # add_route('GET', '/', handler.index)
+        temp_routes = (
+            {'GET', '/', handler.index}
+        )
+        for route in routes(handler):
+            logging.info(route)
             add_route(*route)
 
 if __name__ == '__main__':

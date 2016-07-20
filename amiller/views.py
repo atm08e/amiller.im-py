@@ -27,7 +27,6 @@ class Handlers:
         with open(markdown_path, 'r') as fin:
             return fin.read()
 
-    @staticmethod
     @aiohttp_jinja2.template('index.html')
     async def index(self, request):
         logging.info("rendering index template!")
