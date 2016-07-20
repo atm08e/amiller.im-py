@@ -1,1 +1,1 @@
-web: python amiller/amiller.im.py
+web: python bin/amiller.im.py

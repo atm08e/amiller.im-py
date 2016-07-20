@@ -2,9 +2,21 @@
 <html>
   <head>
     {% block head %}
-        <link rel="stylesheet" type="text/css"
-              href="{{ url('static', filename='style.css') }}" />
-        <title>{{title}}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="description" content="Drew Miller, Andrew Miller, Personal Website">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+              integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+              crossorigin="anonymous">
+      {% block javascript %}
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+                    integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+                    crossorigin="anonymous"></script>
+            <!-- Google Analytics -->
+            <script src="/public/js/ga.js" type="text/javascript" charset="utf-8"></script>
+      {% endblock %}
+
+
     {% endblock %}
   </head>
   <body>

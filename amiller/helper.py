@@ -1,3 +1,4 @@
+import os
 import yaml
 
 async def load_config(fname):
@@ -8,3 +9,4 @@ async def load_config(fname):
 async def load_resources(config):
     # TODO put everything in memory
     pass
+
