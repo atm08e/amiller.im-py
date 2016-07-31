@@ -24,6 +24,10 @@ from amiller.routes import *
 class Server:
 
     @staticmethod
+    async def signal_handlers():
+        pass
+
+    @staticmethod
     async def init_markdown_engine(app):
         #
         # setup template engine
@@ -39,18 +43,26 @@ class Server:
 
     @staticmethod
     async def init(loop):
+
+        #
+        # setup signal handlers
+
         #
         # setup application and extensions
         app = web.Application(loop=loop)
 
         #
         # load config from yaml file
-        ##conf = load_config(str(PROJ_ROOT / 'config' / 'polls.yaml'))
+        # conf = load_config(str(PROJ_ROOT / 'config' / 'polls.yaml'))
 
-        handler = Handlers()
 
-        # Load markdown
+        #
+        # load markdown
         await Server.init_markdown_engine(app)
+
+        #
+        # setup views and routes
+        handler = Handlers()
         await Server.setup_routes(app, handler)
 
         #
@@ -61,9 +73,7 @@ class Server:
         # async def close_pg(app):
         #    pg.close()
         #    await pg.wait_closed()
-        #app.on_cleanup.append(close_pg)
-
-        # setup views and routes
+        # app.on_cleanup.append(close_pg)
 
         # TODO add these to config
         host, port = 'localhost', 8088
@@ -71,27 +81,32 @@ class Server:
 
     @staticmethod
     def run():
+        #
         start_time = time.time()
         # init logging
         logging.basicConfig(level=logging.INFO)
-
+        #
         # TODO - docs
         loop = asyncio.get_event_loop()
         app, host, port = loop.run_until_complete(Server.init(loop))
-
-        logging.info("run() setup: {}".format(time.time()-start_time))
+        #
+        logging.info("Running web app now. Boot time: {}".format(time.time()-start_time))
+        #
         web.run_app(app, host=host, port=port)
 
     @staticmethod
     async def setup_routes(app, handler):
         add_route = app.router.add_route
-        # add_route('GET', '/', handler.index)
-        temp_routes = (
-            {'GET', '/', handler.index}
-        )
         for route in routes(handler):
             logging.info(route)
             add_route(*route)
+
+        path = sys.path.append(os.path.join(script_dir, '..'))
+        #app.router.add_static(prefix='/static/', path=str(path))
+        # add_static_route = app.router.add_static
+        # for static_route in static_routes():
+        #     add_static_route(*static_route)
+
 
 if __name__ == '__main__':
     Server.run()
