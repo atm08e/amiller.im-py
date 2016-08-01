@@ -10,3 +10,8 @@ async def load_resources(config):
     # TODO put everything in memory
     pass
 
+async def load_gallery_list():
+
+
+async def load_gallery_resources():
+    pass

@@ -1,29 +1,28 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    {% block head %}
+<head lang="en">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="description" content="Drew Miller, Andrew Miller, Personal Website">
-
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
-              integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
-              crossorigin="anonymous">
-      {% block javascript %}
-            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
-                    integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
-                    crossorigin="anonymous"></script>
-            <!-- Google Analytics -->
-            <script src="/public/js/ga.js" type="text/javascript" charset="utf-8"></script>
-      {% endblock %}
-
-
-    {% endblock %}
-  </head>
-  <body>
-    <h1>{{title}}</h1>
-    <div>
-      {% block content %}
-      {% endblock %}
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <!-- TODO favicon needs to change -->
+    <link rel="shortcut icon" type="image/png" href="/static/img/favicon.png">
+    <script async src="static/js/require.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="row-fluid page">
+        <div class="span2 offset1 sidebar">
+            {% include "nav.html" %}
+        </div>
+        <div class="span6 post-content">
+            <!--<h1>{{title}}</h1>-->
+            {% block content %}
+            {% endblock %}
+            <hr>
+            Last Build: 7/31/2016 - Copyright 2016, Andrew Miller.
+            <hr>
+        </div>
     </div>
-  </body>
+</div>
+</body>
 </html>

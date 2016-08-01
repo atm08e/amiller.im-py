@@ -3,6 +3,8 @@ import logging
 
 import time
 
+import pathlib
+
 import markdown
 import os
 import sys
@@ -19,7 +21,7 @@ from amiller.views import Handlers
 from amiller.routes import *
 
 # TODO PROJECT ROOT
-#PROJ_ROOT = pathlib.Path(__file__).parent.parent
+PROJ_ROOT = pathlib.Path(__file__).parent
 
 class Server:
 
@@ -43,6 +45,7 @@ class Server:
 
     @staticmethod
     async def init(loop):
+        logging.info("Project Root:{}".format(PROJ_ROOT))
 
         #
         # setup signal handlers
@@ -101,7 +104,8 @@ class Server:
             logging.info(route)
             add_route(*route)
 
-        path = sys.path.append(os.path.join(script_dir, '..'))
+        app.router.add_static('/static/', path=os.path.join(str(PROJ_ROOT), 'static'), name='static')
+        #path = sys.path.append(os.path.join(script_dir, '..'))
         #app.router.add_static(prefix='/static/', path=str(path))
         # add_static_route = app.router.add_static
         # for static_route in static_routes():

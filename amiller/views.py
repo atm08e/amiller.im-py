@@ -12,7 +12,7 @@ class Handlers:
         logging.info("Setting up {} !".format(__name__))
 
     def load_blog_post(self):
-        folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'posts')
+        folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'pages')
         #
         logging.info("Will search: {} for blog post markdown".format(folder))
         #
