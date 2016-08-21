@@ -25,11 +25,6 @@ PROJ_ROOT = pathlib.Path(__file__).parent
 
 class Server:
 
-    @staticmethod
-    async def signal_handlers():
-        pass
-
-    @staticmethod
     async def init_markdown_engine(app):
         #
         # setup template engine
@@ -43,7 +38,6 @@ class Server:
         #env.trim_blocks = True
         #env.lstrip_blocks = True
 
-    @staticmethod
     async def init(loop):
         logging.info("Project Root:{}".format(PROJ_ROOT))
 
@@ -97,7 +91,6 @@ class Server:
         #
         web.run_app(app, host=host, port=port)
 
-    @staticmethod
     async def setup_routes(app, handler):
         add_route = app.router.add_route
         for route in routes(handler):
