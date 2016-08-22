@@ -9,24 +9,8 @@ from aiohttp import web
 
 
 class Handlers:
-    def __init__(self):
+    def __init__(self, snowboarding_gallery, fishing_gallery, blog_posts):
         logging.info("Setting up {} !".format(__name__))
-
-    def load_blog_post(self):
-        folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'pages')
-        #
-        logging.info("Will search: {} for blog post markdown".format(folder))
-        #
-        return [self.load_markdown(os.path.join(folder, item))
-                for item in os.listdir(folder)
-                if item.endswith('.md')]
-
-    def load_markdown(self, markdown_path):
-        # TODO FIX PATH
-        # logging.info(os.path.abspath(path='.'))
-        logging.info('Loading markdown: {}'.format(markdown_path))
-        with open(markdown_path, 'r') as fin:
-            return fin.read()
 
     @aiohttp_jinja2.template('index.html')
     async def index(self, request):
