@@ -1,17 +1,7 @@
-import logging
-from collections import namedtuple
-
-
-def routes(handler):
+def routes(api_handler):
     # TODO generator
     return [
-        ('GET', '/', handler.index),
-        ('GET', '/snowboarding', handler.snowboarding)
+        ('GET', '/', api_handler.index),
+        ('GET', '/snowboarding', api_handler.snowboarding)
     ]
 
-def static_routes():
-    # TODO generator
-    # TODO static routes defined here
-    return [
-
-    ]

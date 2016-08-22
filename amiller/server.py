@@ -1,78 +1,63 @@
 import asyncio
 import logging
-
 import time
-
 import pathlib
-
 import markdown
 import os
 import sys
 
 from aiohttp import web
-import aiohttp_jinja2
-import jinja2
 
-# To get a grib on our parent module
+# To get a grip on our parent module
 script_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(script_dir, '..'))
 
-from amiller.views import Handlers
+from amiller.ApiHandler import ApiHandler
 from amiller.routes import *
 
 # TODO PROJECT ROOT
 PROJ_ROOT = pathlib.Path(__file__).parent
 
 class Server:
-
     async def init_markdown_engine(app):
+        pass
         #
         # setup template engine
-        aiohttp_jinja2.setup(app, loader=jinja2.PackageLoader('amiller','templates'))
+        #aiohttp_jinja2.setup(app, loader=jinja2.PackageLoader('amiller','templates'))
         #
         # Setup markdown filter
-        md = markdown.Markdown(extensions=['meta'])
-        env = aiohttp_jinja2.get_env(app)
-        env.filters['markdown'] = lambda text: md.convert(text)
-        env.globals['get_title'] = lambda: md.Meta['title'][0] # TODO change to get?
+        #md = markdown.Markdown(extensions=['meta'])
+        #env = aiohttp_jinja2.get_env(app)
+        #env.filters['markdown'] = lambda text: md.convert(text)
+        #env.globals['get_title'] = lambda: md.Meta['title'][0] # TODO change to get?
         #env.trim_blocks = True
         #env.lstrip_blocks = True
 
     async def init(loop):
         logging.info("Project Root:{}".format(PROJ_ROOT))
 
-        #
-        # setup signal handlers
-
-        #
         # setup application and extensions
         app = web.Application(loop=loop)
 
-        #
-        # load config from yaml file
-        # conf = load_config(str(PROJ_ROOT / 'config' / 'polls.yaml'))
-
-
-        #
         # load markdown
         await Server.init_markdown_engine(app)
 
-        #
-        # setup views and routes
-        handler = Handlers()
+        # Load the snowboard_gallery json from disk
+        snowboarding_gallery = None
+
+        # Load the fishing gallery json from disk
+        fishing_gallery = None
+
+        # Load blog posts markup from disk
+        blog_posts = None
+
+        # Build api functions, and inject resources
+        handler = ApiHandler(snowboarding_gallery=snowboarding_gallery, fishing_gallery=fishing_gallery,
+                             blog_posts=blog_posts)
+
+        # Setup routes and link them to the api_handler
         await Server.setup_routes(app, handler)
 
-        #
-        # create connection to the database
-        # pg = await init_postgres(conf['postgres'] ||, loop)
-        #
-        # defer the closer
-        # async def close_pg(app):
-        #    pg.close()
-        #    await pg.wait_closed()
-        # app.on_cleanup.append(close_pg)
-
-        # TODO add these to config
         host, port = 'localhost', 8088
         return app, host, port
 
@@ -83,7 +68,6 @@ class Server:
         # init logging
         logging.basicConfig(level=logging.INFO)
         #
-        # TODO - docs
         loop = asyncio.get_event_loop()
         app, host, port = loop.run_until_complete(Server.init(loop))
         #
@@ -96,14 +80,6 @@ class Server:
         for route in routes(handler):
             logging.info(route)
             add_route(*route)
-
-        app.router.add_static('/static/', path=os.path.join(str(PROJ_ROOT), 'static'), name='static')
-        #path = sys.path.append(os.path.join(script_dir, '..'))
-        #app.router.add_static(prefix='/static/', path=str(path))
-        # add_static_route = app.router.add_static
-        # for static_route in static_routes():
-        #     add_static_route(*static_route)
-
 
 if __name__ == '__main__':
     Server.run()
