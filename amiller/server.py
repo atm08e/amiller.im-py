@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import time
 import pathlib
@@ -44,8 +45,11 @@ class Server:
 
         snowboarding_gallery = None
         # Load the snowboard_gallery json from disk
-        with open(os.path.join(PROJ_ROOT, 'gallery_json', 'snowboarding', 's')) as fin:
-            snowboarding_gallery = fin.readlines()
+        json_path = os.path.join(PROJ_ROOT.__str__(), 'gallery_json', 'snowboarding', 'snowboarding-test.json')
+        print('Trying to open: {}'.format(json_path))
+        with open(json_path) as fin:
+            snowboarding_gallery = json.loads(fin.readlines()[0])
+            print(snowboarding_gallery)
 
 
         # Load the fishing gallery json from disk
