@@ -2,17 +2,18 @@ import argparse
 import glob
 import json
 import logging
-import sys
 import os
 from collections import namedtuple
-ProcessedImage = namedtuple('ProcessedImage', 'name, path, width, height, aws_url')
+#
 from PIL import Image
-
+#
 import tinys3
-
+#
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
+#
+ProcessedImage = namedtuple('ProcessedImage', 'name, path, width, height, aws_url')
+#
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--aws-access-key-id', required=True, type=str, help='Aws access key id')
@@ -63,26 +64,24 @@ def get_local_folder_image_generator(folder):
     return jpegs
 
 
-def convert_to_image_thumbs(local_image_generator, out_path):
-    # TODO - autdetection of the aspect ratio, it scales automatically currently, but with a real camera the targets may be different
-    thumbnail_sizes= [(3200,2400),(1600,1200),(1280,960),(800,600),(640,480),(400,300),(320,240),(256,192)] # Tragetting 4:3
-    #
-    gallery_blocks = []
-    #
-    # TODO with generators
-    for image_path in local_image_generator:
-        temp_list = []
-        temp_name = ''
-        for thumb_size in thumbnail_sizes:
-            temp_list.append(create_image_thumb(image_path, out_path, thumb_size))
-        gallery_blocks.append(temp_list)
+def create_image_gen(image_path, out_path):
+    # thumbnail_sizes= [(3200,2400),(1600,1200),(1280,960),(800,600),(640,480),(400,300),(320,240),(256,192)] # Tragetting 4:3
+    thumbnail_sizes = [(640, 480)]
+    return (
+        create_image_thumb(image_path, out_path, thumb_size)
+        for thumb_size in thumbnail_sizes
+    )
 
-    return gallery_blocks
+
+def get_gallery_generator(local_image_generator, out_path):
+    return (
+        create_image_gen(image_path, out_path)
+        for image_path in local_image_generator
+    )
 
 
 def create_image_thumb(infile, outpath, size):
     try:
-        # TODO some regex to check if we already processed this image. If we are perhabs updating a gallery
         im = Image.open(infile)
         im.thumbnail(size, Image.ANTIALIAS)
         org_file_name = os.path.split(infile)[1]
@@ -99,8 +98,8 @@ def create_image_thumb(infile, outpath, size):
 
 
 def create_image_dict(image_set):
-    small_indexer = 4
-    larger_indexer = 6
+    small_indexer = 0           # wildc ard to middle
+    larger_indexer = 0
     src_set = []
     for image in image_set:
         src_set.append('{} {}w'.format(image.aws_url, image.width))
@@ -139,6 +138,10 @@ def search_s3_for_existing_file(bucket_list, image):
     return False
 
 
+def create_bucket(conn, bucket_name):
+    conn.create(bucket_name)
+
+
 def main():
     args = parse_args()
     logger.info(args)
@@ -169,30 +172,36 @@ def main():
     # Create generator object to load the images (png/jpeg/jpg)
     local_image_generator = get_local_folder_image_generator(folder)
 
+    # Divide and Conquer
+
+
+
+
     # Create thumbnails of the images /w filename that represent the resolution and create a copy of the original with its correct resolution in name
     # Return another generator of objects with the respected image filename. We will use this to generate a json file.
-    converted_images_generator = convert_to_image_thumbs(local_image_generator=local_image_generator,
-                                                         out_path=out_bucket_folder)
+    converted_images_generator = get_gallery_generator(local_image_generator=local_image_generator,
+                                                    out_path=out_bucket_folder)
 
     # Check if bucket name exists already in S3
     # Create bucket that is the same as the folder name
     s3_conn = get_s3_connection(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
-    bucket_name = '{}-{}'.format(aws_access_key_id.lower(),folder.lower())
+    bucket_name = '{}-{}'.format(aws_access_key_id.lower(), bucket_name.lower())
+    # TODO - tinys3 wont do this create_bucket(conn=s3_conn, bucket_name=bucket_name)
 
     # For each file see if it is already uploaded
 
     # upload it to the bucket if it isnt.
     # TODO - Leverage the connection pool instead of sequential
     final_dict = []
-    print('Length: {}'.format(len(converted_images_generator)))
+
     for image_set in converted_images_generator:
         final_image_set = []  # yuck
-        print('Length image_set: {}'.format(len(image_set)))
+
         for image in image_set:
             bucket_list = get_bucket_file_list(conn=s3_conn, bucket_name=bucket_name,file_prefix=image.name)  # TODO - dont like this shit
             if not search_s3_for_existing_file(bucket_list, image):
                 print('Uploading {} to S3'.format(image.name))
-                #upload_file(s3_conn, bucket_name, image.name, image.path)
+                upload_file(s3_conn, bucket_name, image.name, image.path)
             else:
                 print('{} already uploaded to S3'.format(image.name))
 
