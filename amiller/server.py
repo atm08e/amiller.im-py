@@ -42,8 +42,11 @@ class Server:
         # load markdown
         await Server.init_markdown_engine(app)
 
-        # Load the snowboard_gallery json from disk
         snowboarding_gallery = None
+        # Load the snowboard_gallery json from disk
+        with open(os.path.join(PROJ_ROOT, 'gallery_json', 'snowboarding', 's')) as fin:
+            snowboarding_gallery = fin.readlines()
+
 
         # Load the fishing gallery json from disk
         fishing_gallery = None

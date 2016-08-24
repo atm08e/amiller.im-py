@@ -25,6 +25,8 @@ def parse_args():
                         help='the bucket to create and upload to aws')
     parser.add_argument('-a', '--aws-host', required=True, type=str,
                         help='aws host to prepend to the bucket')
+    parser.add_argument('-g', '--gallery-json-filename', required=True, type=str,
+                        help='The name of the gallery json file. eg. snowboarding-2016.json')
 
     #
     # Destination folder for JSON will create new folder
@@ -70,10 +72,13 @@ def convert_to_image_thumbs(local_image_generator, out_path):
     # TODO with generators
     for image_path in local_image_generator:
         temp_list = []
+        temp_name = ''
         for thumb_size in thumbnail_sizes:
             temp_list.append(create_image_thumb(image_path, out_path, thumb_size))
         gallery_blocks.append(temp_list)
+
     return gallery_blocks
+
 
 def create_image_thumb(infile, outpath, size):
     try:
@@ -94,38 +99,44 @@ def create_image_thumb(infile, outpath, size):
 
 
 def create_image_dict(image_set):
-    # {
-    #     src: 'http://example.com/example/img1_small.jpg',
-    #     width: 681,
-    #     height: 1024,
-    #     aspectRatio: 1.5,
-    #     lightboxImage: {
-    #         src: 'http://example.com/example/img1_large.jpg',
-    #         srcset: [
-    #             'http://example.com/example/img1_1024.jpg 1024w',
-    #             'http://example.com/example/img1_800.jpg 800w',
-    #             'http://example.com/example/img1_500.jpg 500w',
-    #             'http://example.com/example/img1_320.jpg 320w',
-    #         ]
-    #     }
-    # }
-    smallIndexer = 4
-    largerIndexer = 6
-    srcset=[]
+    small_indexer = 4
+    larger_indexer = 6
+    src_set = []
     for image in image_set:
-        srcset.append('{} {}w'.format(image.aws_url, image.width))
+        src_set.append('{} {}w'.format(image.aws_url, image.width))
 
     json_to_return = {
-        'src': image_set[smallIndexer].aws_url,
-        'width': image_set[smallIndexer].width,
-        'height': image_set[smallIndexer].height,
-        'aspectRatio': float(image_set[smallIndexer].width)/image_set[smallIndexer].height,
+        'src': image_set[small_indexer].aws_url,
+        'width': image_set[small_indexer].width,
+        'height': image_set[small_indexer].height,
+        'aspectRatio': float(image_set[small_indexer].width)/image_set[small_indexer].height,
         'lightboxImage' :{
-            'src': image_set[largerIndexer].aws_url,
-            'srcset': srcset
+            'src': image_set[larger_indexer].aws_url,
+            'srcset': src_set
         }
     }
     return json_to_return # TODO - bad name
+
+
+def save_gallery_dict(path, gallery_dict):
+    gallery_json = json.dumps(gallery_dict)
+    # TODO check path
+    print('Trying to save json file: {}'.format(path))
+    with open(path, 'w+') as fout:
+        fout.write(gallery_json)
+
+
+def get_bucket_file_list(conn, bucket_name, file_prefix):
+    print('Searching bucket: {} for prefix files {}'.format(bucket_name, file_prefix))
+    return conn.list(file_prefix, bucket_name)
+
+
+def search_s3_for_existing_file(bucket_list, image):
+    for i in bucket_list:
+        if i['key'] == image.name:
+            print('Found existing S3 image :{}'.format(image.name))
+            return True
+    return False
 
 
 def main():
@@ -137,14 +148,20 @@ def main():
     out_folder = args['out_folder']
     bucket_name = args['bucket_name']
     aws_host = args['aws_host']
+    gallery_json_filename = args['gallery_json_filename']
 
     if not os.path.exists(out_folder):
-        raise Exception('Out folder: {} does not exists'.format(out_folder))
-
+        logger.debug(('Making output folder: {}'.format(out_folder)))
+        os.mkdir(out_folder)
+    #
     out_bucket_folder = os.path.join(out_folder, bucket_name)
+    #
     if not os.path.exists(out_bucket_folder):
         logger.debug('Making bucket folder: {}'.format(out_bucket_folder))
         os.mkdir(out_bucket_folder)
+
+    # TODO check if gallery json exists arleady
+    gallery_json_file = os.path.join(out_folder, gallery_json_filename)
 
 
     # Check that local folder exists
@@ -162,21 +179,33 @@ def main():
     s3_conn = get_s3_connection(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
     bucket_name = '{}-{}'.format(aws_access_key_id.lower(),folder.lower())
 
-    # For each file see if it is already uploaded first and upload it to the bucket if it isnt.
+    # For each file see if it is already uploaded
+
+    # upload it to the bucket if it isnt.
     # TODO - Leverage the connection pool instead of sequential
     final_dict = []
+    print('Length: {}'.format(len(converted_images_generator)))
     for image_set in converted_images_generator:
-        final_image_set = [] # yuck
+        final_image_set = []  # yuck
+        print('Length image_set: {}'.format(len(image_set)))
         for image in image_set:
-            upload_file(s3_conn, bucket_name, image.name, image.path)
+            bucket_list = get_bucket_file_list(conn=s3_conn, bucket_name=bucket_name,file_prefix=image.name)  # TODO - dont like this shit
+            if not search_s3_for_existing_file(bucket_list, image):
+                print('Uploading {} to S3'.format(image.name))
+                #upload_file(s3_conn, bucket_name, image.name, image.path)
+            else:
+                print('{} already uploaded to S3'.format(image.name))
+
             aws_url = '{}/{}/{}'.format(aws_host, bucket_name, image.name)
-            print(aws_url)
+            print(aws_url + '\n')
             final_image_set.append(ProcessedImage(name=image.name, height=image.height, width=image.width, path=image.path, aws_url=aws_url))
 
         sorted(final_image_set, key=lambda x: x.width)    # Just for the sake of getting them in order. TODO - better way
         final_dict.append(create_image_dict(final_image_set))
 
     # Create json file and save it to the destination project folder.
-    print(json.dumps(final_dict))
+    #print(json.dumps(final_dict))
+
+    save_gallery_dict(gallery_json_file, final_dict)
 if __name__ == '__main__':
     main()
