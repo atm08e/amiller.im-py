@@ -58,10 +58,8 @@ def get_local_folder_image_generator(folder):
         raise Exception('Source: {} folder for gallery does not exist'.format(search_directory))
 
     print('Searching {} for JPGs'.format(search_directory))
-    jpegs = glob.glob('{}/*.jpg'.format(search_directory)) # TODO regex for PNG and JPEG, TODO generator with iglob
-    print('Found {} images to process'.format(len(jpegs)))
 
-    return jpegs
+    return glob.iglob('{}/*.jpg'.format(search_directory))
 
 
 def create_image_gen(image_path, out_path):
@@ -173,9 +171,6 @@ def main():
     local_image_generator = get_local_folder_image_generator(folder)
 
     # Divide and Conquer
-
-
-
 
     # Create thumbnails of the images /w filename that represent the resolution and create a copy of the original with its correct resolution in name
     # Return another generator of objects with the respected image filename. We will use this to generate a json file.
