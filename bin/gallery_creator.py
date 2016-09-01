@@ -63,8 +63,8 @@ def get_local_folder_image_generator(folder):
 
 
 def create_image_gen(image_path, out_path):
-    # thumbnail_sizes= [(3200,2400),(1600,1200),(1280,960),(800,600),(640,480),(400,300),(320,240),(256,192)] # Tragetting 4:3
-    thumbnail_sizes = [(640, 480)]
+    thumbnail_sizes= [(3200,2400),(1600,1200),(1280,960),(800,600),(640,480),(400,300),(320,240),(256,192)] # Tragetting 4:3
+    #thumbnail_sizes = [(640, 480)] # for testing
     return (
         create_image_thumb(image_path, out_path, thumb_size)
         for thumb_size in thumbnail_sizes
@@ -81,12 +81,14 @@ def get_gallery_generator(local_image_generator, out_path):
 def create_image_thumb(infile, outpath, size):
     try:
         im = Image.open(infile)
+        # TODO check sizes
         im.thumbnail(size, Image.ANTIALIAS)
         org_file_name = os.path.split(infile)[1]
         org_file_name_no_ext = os.path.splitext(org_file_name)[0]
         out_file_name = '{}-{}x{}.jpg'.format(org_file_name_no_ext, *im.size)
         out_file_full_path = os.path.join(outpath, out_file_name)
         logger.info('Image Outfile: {}'.format(out_file_full_path))
+        #
         if not os.path.exists(out_file_full_path):
             im.save(out_file_full_path, 'JPEG')
     except Exception as ex:

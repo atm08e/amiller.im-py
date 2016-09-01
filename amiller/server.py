@@ -45,8 +45,9 @@ class Server:
 
         snowboarding_gallery = None
         # Load the snowboard_gallery json from disk
-        json_path = os.path.join(PROJ_ROOT.__str__(), 'gallery_json', 'snowboarding', 'snowboarding-test.json')
+        json_path = os.path.join(PROJ_ROOT.__str__(), 'gallery_json', 'snowboarding-test.json')
         print('Trying to open: {}'.format(json_path))
+        # TODO check to see if it exists
         with open(json_path) as fin:
             snowboarding_gallery = json.loads(fin.readlines()[0])
             print(snowboarding_gallery)
