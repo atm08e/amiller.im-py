@@ -25,11 +25,11 @@ class ApiHandler:
 
         # TODO only in dev mode
         headers = {
-            web.hdrs.ACCESS_CONTROL_ALLOW_ORIGIN: 'http://localhost:3000'
+            web.hdrs.ACCESS_CONTROL_ALLOW_ORIGIN: 'https://amiller-api.apps.mia.ulti.io'
         }
-        print(self.gallery)
+        #print(self.gallery)
 
-        print(json.dumps(self.gallery))
+        #print(json.dumps(self.gallery))
         return web.json_response(self.gallery, headers=headers)
 
 

@@ -66,7 +66,7 @@ class Server:
         # Setup routes and link them to the api_handler
         await Server.setup_routes(app, handler)
 
-        host, port = 'localhost', 8088
+        host, port = '0.0.0.0', 8080
         return app, host, port
 
     @staticmethod
